@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zoo Adventure: Meet the Animals!</title>
+  <style>
+    :root {
+      --primary: #2e7d32;
+      --primary-dark: #1b5e20;
+      --primary-light: #4caf50;
+      --secondary: #ff9800;
+      --accent: #e91e63;
+      --bg-gradient: linear-gradient(135deg, #a8e6cf 0%, #dbedc8 50%, #ffd3b6 100%);
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --text-dark: #2c3e50;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Fredoka', cursive, sans-serif; }
+    
+    body { 
+      background: var(--bg-gradient); 
+      color: var(--text-dark); 
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* CONFETTI CANVAS LAYER */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* BACKGROUND STORYBOOK DECORATIONS LAYER */
+    .bg-decor-layer {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .corner-leaf { position: absolute; font-size: 5rem; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15)); z-index: 2; }
+    .corner-leaf.top-left { top: -15px; left: -10px; transform: rotate(-20deg); }
+    .corner-leaf.top-right { top: -15px; right: -10px; transform: rotate(20deg); }
+    .corner-leaf.bottom-left { bottom: -10px; left: -10px; transform: rotate(30deg); }
+    .corner-leaf.bottom-right { bottom: -10px; right: -10px; transform: rotate(-30deg); }
+
+    .bg-sun { position: absolute; top: 220px; left: 60px; font-size: 4.5rem; animation: floatSun 4s ease-in-out infinite alternate; filter: drop-shadow(0 4px 8px rgba(255, 193, 7, 0.4)); }
+    .bg-cloud-1 { position: absolute; top: 230px; right: 80px; font-size: 3.5rem; opacity: 0.9; animation: floatCloud 6s ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08)); }
+    .bg-cloud-2 { position: absolute; top: 270px; left: 160px; font-size: 3rem; opacity: 0.85; animation: floatCloud 5s ease-in-out infinite alternate 1s; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08)); }
+
+    @keyframes floatSun { 0% { transform: scale(1) rotate(0deg); } 100% { transform: scale(1.15) rotate(12deg); } }
+    @keyframes floatCloud { 0% { transform: translateX(0); } 100% { transform: translateX(25px); } }
+
+    .bg-detail { position: absolute; font-size: 2.5rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.12)); }
+    .bg-butterfly-1 { top: 35%; left: 9%; animation: floatAnim 3s infinite alternate; }
+    .bg-butterfly-2 { top: 65%; right: 9%; animation: floatAnim 4s infinite alternate 0.5s; }
+    .bg-flower-1 { bottom: 65px; left: 8%; font-size: 2.8rem; }
+    .bg-flower-2 { bottom: 85px; right: 9%; font-size: 2.8rem; }
+    .bg-mushroom { bottom: 25px; left: 15%; font-size: 2.6rem; }
+    .bg-sparkle-1 { top: 40%; right: 7%; font-size: 2.2rem; animation: pulseSparkle 2s infinite; }
+    .bg-sparkle-2 { top: 78%; left: 6%; font-size: 2.2rem; animation: pulseSparkle 2.5s infinite 1s; }
+
+    .peeking-sticker { position: absolute; font-size: 3.8rem; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.15)); z-index: 3; }
+    .sticker-monkey { top: 52%; left: -5px; transform: rotate(15deg); animation: peekAnim 4s ease-in-out infinite alternate; }
+    .sticker-elephant { bottom: 15px; left: 70px; animation: peekAnim 3.5s ease-in-out infinite alternate 0.5s; }
+    .sticker-lion { top: 48%; right: -5px; transform: rotate(-15deg); animation: peekAnim 4.5s ease-in-out infinite alternate; }
+    .sticker-giraffe { bottom: 15px; right: 70px; animation: peekAnim 3.8s ease-in-out infinite alternate 1s; }
+
+    @keyframes peekAnim {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-8px) scale(1.06); }
+    }
+
+    .paw-print { position: absolute; font-size: 1.8rem; opacity: 0.45; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+    .paw-1 { top: 320px; left: 140px; transform: rotate(25deg); }
+    .paw-2 { top: 365px; left: 175px; transform: rotate(40deg); }
+    .paw-3 { top: 410px; left: 210px; transform: rotate(20deg); }
+    .paw-4 { bottom: 160px; right: 150px; transform: rotate(-30deg); }
+    .paw-5 { bottom: 205px; right: 185px; transform: rotate(-15deg); }
+
+    @keyframes pulseSparkle { 0%, 100% { opacity: 0.4; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.35); } }
+
+    /* HOME-ONLY SIDE CARTOONS */
+    .home-decor {
+      position: fixed;
+      top: 220px;
+      bottom: 60px;
+      width: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .home-decor.left { left: 15px; }
+    .home-decor.right { right: 15px; }
+    .home-decor.hidden { opacity: 0; transform: scale(0.8); pointer-events: none; }
+
+    .decor-item {
+      font-size: 3.5rem;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+      animation: floatAnim 3s ease-in-out infinite alternate;
+    }
+    .home-decor.left .decor-item:nth-child(2) { animation-delay: 0.5s; }
+    .home-decor.left .decor-item:nth-child(3) { animation-delay: 1s; }
+    .home-decor.right .decor-item:nth-child(1) { animation-delay: 0.3s; }
+    .home-decor.right .decor-item:nth-child(2) { animation-delay: 0.8s; }
+
+    @keyframes floatAnim {
+      from { transform: translateY(0px) rotate(-5deg); }
+      to { transform: translateY(-15px) rotate(5deg); }
+    }
+
+    /* SIDE QUICK-NAV POP-OUT BADGES */
+    .side-nav-container {
+      position: fixed;
+      top: 55%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      z-index: 150;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .side-nav-container.left { left: 20px; }
+    .side-nav-container.right { right: 20px; }
+    .side-nav-container.hidden { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.5); }
+
+    .side-badge-btn {
+      background: linear-gradient(135deg, #ffffff 0%, #fff8e1 100%);
+      border: 4px solid #ffb300;
+      border-radius: 50px;
+      padding: 14px 26px;
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #1b5e20;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.22), inset 0 2px 4px rgba(255,255,255,0.8);
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+    }
+    .side-badge-btn:hover {
+      transform: scale(1.15) translateX(6px);
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe082 100%);
+      border-color: #ff9800;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+    }
+    .side-badge-btn:active { transform: scale(0.95); }
+
+    /* SMART SHRINKING JUNGLE HEADER */
+    header { 
+      background: linear-gradient(180deg, #81c784 0%, #388e3c 65%, #1b5e20 100%); 
+      color: white; 
+      padding: 18px 20px 22px 20px; 
+      text-align: center; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
+      position: sticky; 
+      top: 0; 
+      z-index: 100; 
+      border-bottom: 6px solid #ffc107;
+      overflow: hidden;
+      min-height: 170px;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* SHRINK STATE WHEN SCROLLED DOWN */
+    header.scrolled {
+      padding: 8px 20px 10px 20px;
+      min-height: 95px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      border-bottom-width: 4px;
+    }
+
+    header.scrolled h1 {
+      font-size: 1.7rem;
+      margin-bottom: 2px;
+    }
+
+    header.scrolled nav {
+      margin-top: 6px;
+      gap: 8px;
+    }
+
+    header.scrolled nav button {
+      padding: 6px 16px;
+      font-size: 0.95rem;
+      border-width: 2.5px;
+    }
+
+    header.scrolled .header-animal-spot {
+      font-size: 1.9rem;
+      bottom: 6px;
+    }
+
+    header.scrolled .header-paw {
+      font-size: 1rem;
+      opacity: 0.3;
+    }
+
+    header.scrolled .hanging-monkey-wrap {
+      transform: scale(0.7);
+      top: -12px;
+    }
+
+    header.scrolled .flying-bird {
+      font-size: 1.5rem;
+      top: 5px;
+    }
+
+    header.scrolled .header-butterfly {
+      font-size: 1.4rem;
+      top: 10px;
+    }
+
+    /* FULL VECTOR JUNGLE TREES & VINES BACKGROUND */
+    .header-jungle-art {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      transition: all 0.35s ease;
+    }
+
+    /* HEADER FOOTPRINTS / PAW PRINTS */
+    .header-paw {
+      position: absolute;
+      font-size: 1.4rem;
+      opacity: 0.55;
+      z-index: 3;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+      transition: all 0.35s ease;
+    }
+    .hpaw-1 { top: 18px; left: 24%; transform: rotate(-25deg); }
+    .hpaw-2 { top: 35px; left: 27%; transform: rotate(-10deg); }
+    .hpaw-3 { top: 15px; right: 26%; transform: rotate(15deg); }
+    .hpaw-4 { top: 38px; right: 23%; transform: rotate(30deg); }
+
+    /* ANIMATED HANGING MONKEY & SLOTH */
+    .hanging-monkey-wrap {
+      position: absolute;
+      top: 0;
+      left: 17%;
+      z-index: 3;
+      transform-origin: top center;
+      animation: swingMonkey 3.5s ease-in-out infinite alternate;
+      transition: all 0.35s ease;
+    }
+    .hanging-monkey-wrap.right {
+      left: auto;
+      right: 17%;
+      animation-delay: 0.8s;
+    }
+
+    @keyframes swingMonkey {
+      0% { transform: rotate(-8deg); }
+      100% { transform: rotate(8deg); }
+    }
+
+    /* ANIMATED FLUTTERING BUTTERFLIES */
+    .header-butterfly {
+      position: absolute;
+      font-size: 2rem;
+      z-index: 4;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+      animation: flutter 4s ease-in-out infinite alternate;
+      transition: all 0.35s ease;
+    }
+    .bf-1 { top: 20px; left: 11%; animation-delay: 0.2s; }
+    .bf-2 { top: 35px; right: 12%; animation-delay: 1.2s; }
+
+    /* ANIMATED FLYING BIRDS IN SKY (RIGHT TO LEFT MOVEMENT) */
+    .flying-bird {
+      position: absolute;
+      font-size: 2.2rem;
+      z-index: 5;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25));
+      animation: flyRightToLeft 8s linear infinite;
+      transition: all 0.35s ease;
+    }
+    .bird-1 { top: 12px; right: -50px; animation-duration: 9s; }
+    .bird-2 { top: 30px; right: -100px; animation-duration: 12s; animation-delay: 4s; font-size: 1.8rem; }
+
+    @keyframes flyRightToLeft {
+      0% { transform: translateX(0) translateY(0); }
+      50% { transform: translateX(-60vw) translateY(-8px); }
+      100% { transform: translateX(-115vw) translateY(0); }
+    }
+
+    @keyframes flutter {
+      0% { transform: translateY(0) scale(1) rotate(-10deg); }
+      50% { transform: translateY(-10px) scale(1.1) rotate(10deg); }
+      100% { transform: translateY(5px) scale(0.95) rotate(-5deg); }
+    }
+
+    /* ANIMATED ANIMALS IN THE HEADER TREES */
+    .header-animal-spot {
+      position: absolute;
+      font-size: 2.6rem;
+      z-index: 4;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+      transition: all 0.35s ease;
+    }
+    .spot-giraffe { bottom: 15px; left: 2%; animation: bobHead 3s ease-in-out infinite alternate; }
+    .spot-leopard { bottom: 18px; left: 7%; animation: bobHead 3.3s ease-in-out infinite alternate 0.3s; }
+    .spot-frog { top: 18px; left: 21%; font-size: 1.8rem; animation: bobHead 2.5s ease-in-out infinite alternate 0.6s; }
+    .spot-lion { bottom: 15px; left: 12%; animation: bobHead 2.9s ease-in-out infinite alternate 0.2s; }
+    
+    .spot-elephant { bottom: 12px; right: 12%; animation: bobHead 3.5s ease-in-out infinite alternate 0.4s; }
+    .spot-zebra { bottom: 18px; right: 2%; animation: bobHead 4s ease-in-out infinite alternate 0.8s; }
+
+    @keyframes bobHead {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-6px); }
+    }
+
+    header h1 { 
+      font-size: 2.6rem; 
+      letter-spacing: 2px; 
+      text-shadow: 3px 3px 0px #000, 0 0 15px rgba(0,0,0,0.5); 
+      position: relative;
+      z-index: 10;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.35s ease;
+    }
+
+    nav { 
+      display: flex; 
+      justify-content: center; 
+      gap: 12px; 
+      flex-wrap: wrap; 
+      margin-top: 14px; 
+      position: relative;
+      z-index: 10;
+      transition: all 0.35s ease;
+    }
+    nav button { 
+      background: #ffffff; 
+      color: #1b5e20; 
+      border: 3.5px solid #ffffff; 
+      padding: 10px 24px; 
+      font-weight: 900; 
+      border-radius: 30px; 
+      cursor: pointer; 
+      transition: all 0.25s ease; 
+      font-size: 1.15rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    nav button.active, nav button:hover { 
+      background: var(--secondary); 
+      color: white; 
+      border-color: #ffe082; 
+      transform: scale(1.12) translateY(-2px); 
+      box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+    }
+
+    /* MAIN CONTAINER & DECORATIVE CARD BORDERS */
+    main { 
+      flex: 1; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 30px 20px; 
+      max-width: 1100px; 
+      margin: 0 auto; 
+      width: 100%; 
+      position: relative;
+      z-index: 20;
+    }
+
+    .section-card { 
+      background: var(--card-bg); 
+      border-radius: 36px; 
+      padding: 42px; 
+      width: 100%; 
+      box-shadow: 0 18px 40px rgba(0,0,0,0.18); 
+      border: 7px solid #81c784; 
+      outline: 4px dashed #a5d6a7;
+      outline-offset: -14px;
+      display: none; 
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+      text-align: center; 
+      position: relative;
+    }
+    .section-card.active { display: block; }
+
+    @keyframes popIn { 
+      from { opacity: 0; transform: scale(0.9) translateY(20px); } 
+      to { opacity: 1; transform: scale(1) translateY(0); } 
+    }
+
+    /* BUTTONS */
+    .btn-main { 
+      background: linear-gradient(135deg, #ff9800, #f57c00); 
+      color: white; 
+      border: 4px solid #fff3e0; 
+      padding: 22px 56px; 
+      font-size: 1.8rem; 
+      font-weight: 900; 
+      border-radius: 60px; 
+      cursor: pointer; 
+      box-shadow: 0 10px 0 #b26a00, 0 15px 25px rgba(0,0,0,0.3); 
+      transition: all 0.15s ease-in-out; 
+      margin: 25px 10px; 
+      display: inline-block; 
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      animation: heroPulse 2s infinite ease-in-out;
+    }
+    
+    @keyframes heroPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .btn-main:hover { 
+      transform: translateY(-5px) scale(1.08) !important; 
+      box-shadow: 0 14px 0 #b26a00, 0 20px 30px rgba(0,0,0,0.35); 
+      background: linear-gradient(135deg, #ffa726, #fb8c00);
+    }
+    .btn-main:active { 
+      transform: translateY(4px) scale(0.98) !important; 
+      box-shadow: 0 4px 0 #b26a00, 0 6px 10px rgba(0,0,0,0.2); 
+    }
+
+    .btn-secondary { 
+      background: linear-gradient(135deg, #2196f3, #1976d2); 
+      box-shadow: 0 10px 0 #0d47a1, 0 15px 25px rgba(0,0,0,0.3); 
+      animation: none;
+      padding: 18px 42px;
+      font-size: 1.4rem;
+    }
+    .btn-secondary:hover {
+      box-shadow: 0 14px 0 #0d47a1, 0 20px 30px rgba(0,0,0,0.35);
+      background: linear-gradient(135deg, #42a5f5, #1e88e5);
+    }
+    .btn-secondary:active { box-shadow: 0 4px 0 #0d47a1; }
+
+    /* WELCOME SECTION */
+    .welcome-banner { 
+      max-width: 420px; 
+      width: 100%; 
+      height: auto; 
+      margin: 20px 0; 
+      border-radius: 24px; 
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border: 4px solid #fff;
+      animation: bounce 2s infinite ease-in-out; 
+    }
+    @keyframes bounce { 
+      0%, 100% { transform: translateY(0); } 
+      50% { transform: translateY(-12px); } 
+    }
+
+    /* ANIMAL INTRO CARD */
+    .animal-card { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .animal-img { 
+      width: 250px; 
+      height: 250px; 
+      object-fit: contain; 
+      background: #f1f8e9; 
+      border-radius: 24px; 
+      padding: 15px; 
+      border: 4px dashed #81c784; 
+      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    }
+    .animal-title-wrap { display: flex; align-items: center; gap: 15px; }
+    .btn-speaker { 
+      background: #e91e63; 
+      color: white; 
+      border: 3px solid #fff; 
+      width: 55px; 
+      height: 55px; 
+      border-radius: 50%; 
+      font-size: 1.6rem; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      box-shadow: 0 6px 0 #880e4f, 0 8px 15px rgba(0,0,0,0.2); 
+      transition: all 0.15s ease;
+    }
+    .btn-speaker:hover { transform: scale(1.1); }
+    .btn-speaker:active { transform: translateY(3px); box-shadow: 0 3px 0 #880e4f; }
+
+    .description-list { 
+      text-align: left; 
+      background: #ffffff; 
+      border-radius: 20px; 
+      padding: 20px 30px; 
+      border-left: 8px solid var(--primary); 
+      max-width: 550px; 
+      width: 100%; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .description-list li { margin: 10px 0; font-size: 1.15rem; font-weight: bold; color: #37474f; }
+
+    /* VIDEO FRAME */
+    .video-wrapper { 
+      position: relative; 
+      padding-bottom: 56.25%; 
+      height: 0; 
+      overflow: hidden; 
+      max-width: 100%; 
+      border-radius: 24px; 
+      border: 8px solid #4caf50; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+      margin: 25px 0; 
+    }
+    .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+    /* LISTEN & GUESS */
+    .guess-options { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-top: 25px; }
+    .guess-card { 
+      background: #ffffff; 
+      border: 4px solid #c8e6c9; 
+      border-radius: 20px; 
+      padding: 15px; 
+      width: 160px; 
+      cursor: pointer; 
+      transition: all 0.25s ease; 
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    }
+    .guess-card:hover { transform: translateY(-8px) scale(1.05); border-color: var(--secondary); background: #fffde7; box-shadow: 0 12px 20px rgba(0,0,0,0.15); }
+    .guess-card img { width: 120px; height: 120px; object-fit: contain; }
+
+    /* MATCHING ACTIVITY */
+    .matching-container { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; margin: 25px 0; }
+    .matching-column { flex: 1; min-width: 290px; display: flex; flex-direction: column; gap: 12px; }
+    .match-item { 
+      background: #ffffff; 
+      border: 3px solid #a5d6a7; 
+      padding: 14px 18px; 
+      border-radius: 16px; 
+      font-weight: bold; 
+      font-size: 1.05rem;
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+      transition: all 0.2s ease;
+    }
+    .match-item.selected { background: #ffe082; border-color: #ffb300; transform: scale(1.02); }
+    .match-item.matched { background: #e0f2f1; border-color: #00897b; }
+
+    .match-item.correct { 
+      background: #c8e6c9 !important; 
+      border-color: #2e7d32 !important; 
+      color: #1b5e20;
+    }
+    .match-item.incorrect { 
+      background: #ffcdd2 !important; 
+      border-color: #d32f2f !important; 
+      color: #b71c1c;
+    }
+
+    /* QUIZ */
+    .quiz-options { display: flex; flex-direction: column; gap: 12px; max-width: 500px; margin: 25px auto; }
+    .quiz-btn { 
+      background: #ffffff; 
+      border: 3px solid #b0bec5; 
+      padding: 16px 24px; 
+      border-radius: 16px; 
+      font-size: 1.15rem; 
+      font-weight: bold; 
+      cursor: pointer; 
+      text-align: left; 
+      transition: all 0.2s ease; 
+      box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+    }
+    .quiz-btn:hover { background: #e3f2fd; border-color: #2196f3; transform: translateX(6px); }
+
+    .feedback-box { margin-top: 20px; padding: 16px; border-radius: 16px; font-weight: bold; font-size: 1.2rem; display: none; }
+    .feedback-box.correct { background: #d4edda; color: #155724; border: 3px solid #c3e6cb; }
+    .feedback-box.incorrect { background: #f8d7da; color: #721c24; border: 3px solid #f5c6cb; }
+
+    /* MODAL POPUP */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); display: none; justify-content: center; align-items: center; z-index: 200; padding: 20px; }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: white; border-radius: 24px; max-width: 680px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 30px; text-align: left; box-shadow: 0 15px 40px rgba(0,0,0,0.3); border: 4px solid var(--primary); }
+
+    /* LUSH NATURE FOOTER WITH FLORAL BORDER */
+    footer { 
+      text-align: center; 
+      padding: 22px 18px; 
+      font-size: 0.95rem; 
+      color: #2e7d32; 
+      background: #e8f5e9; 
+      border-top: 4px solid #81c784; 
+      z-index: 20; 
+      position: relative; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    footer .footer-flora-decor {
+      font-size: 1.6rem;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      opacity: 0.9;
+    }
+    footer a { color: var(--primary); font-weight: bold; text-decoration: none; margin: 0 10px; cursor: pointer; }
+    footer a:hover { text-decoration: underline; }
+
+    /* MOBILE SPECIFIC CSS ADJUSTMENTS */
+    @media (max-width: 768px) {
+      .side-nav-container,
+      .home-decor {
+        display: none !important;
+      }
+
+      header {
+        padding: 12px 10px 14px 10px;
+        min-height: auto;
+      }
+
+      header h1 {
+        font-size: 1.8rem;
+      }
+
+      nav {
+        margin-top: 10px;
+        gap: 6px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      nav button {
+        padding: 7px 15px;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+      }
+
+      .header-animal-spot {
+        font-size: 1.8rem;
+      }
+
+      main {
+        padding: 15px 10px;
+      }
+
+      .section-card {
+        padding: 22px 16px;
+        border-radius: 24px;
+        border-width: 4px;
+      }
+
+      .btn-main {
+        padding: 14px 28px;
+        font-size: 1.25rem;
+        margin: 15px 5px;
+      }
+
+      .btn-secondary {
+        padding: 12px 24px;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CONFETTI ANIMATION CANVAS -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- ENHANCED VISIBLE BACKGROUND STORYBOOK DECORATIONS LAYER -->
+  <div class="bg-decor-layer">
+    <span class="corner-leaf top-left">🌿</span>
+    <span class="corner-leaf top-right">🍃</span>
+    <span class="corner-leaf bottom-left">🌴</span>
+    <span class="corner-leaf bottom-right">🌿</span>
+
+    <span class="bg-sun">☀️</span>
+    <span class="bg-cloud-1">☁️</span>
+    <span class="bg-cloud-2">☁️</span>
+
+    <span class="bg-detail bg-butterfly-1">🦋</span>
+    <span class="bg-detail bg-butterfly-2">🦋</span>
+    <span class="bg-detail bg-flower-1">🌸</span>
+    <span class="bg-detail bg-flower-2">🌼</span>
+    <span class="bg-detail bg-mushroom">🍄</span>
+    <span class="bg-detail bg-sparkle-1">✨</span>
+    <span class="bg-detail bg-sparkle-2">⭐</span>
+
+    <span class="peeking-sticker sticker-monkey">🐒</span>
+    <span class="peeking-sticker sticker-elephant">🐘</span>
+    <span class="peeking-sticker sticker-lion">🦁</span>
+    <span class="peeking-sticker sticker-giraffe">🦒</span>
+
+    <span class="paw-print paw-1">🐾</span>
+    <span class="paw-print paw-2">🐾</span>
+    <span class="paw-print paw-3">🐾</span>
+    <span class="paw-print paw-4">🐾</span>
+    <span class="paw-print paw-5">🐾</span>
+  </div>
+
+  <!-- HOME PAGE ONLY SIDE CARTOONS -->
+  <div id="home-decor-left" class="home-decor left">
+    <span class="decor-item">🌿</span>
+    <span class="decor-item">🐒</span>
+    <span class="decor-item">🦜</span>
+    <span class="decor-item">🌴</span>
+  </div>
+
+  <div id="home-decor-right" class="home-decor right">
+    <span class="decor-item">🌴</span>
+    <span class="decor-item">🦁</span>
+    <span class="decor-item">🦒</span>
+    <span class="decor-item">🌿</span>
+  </div>
+
+  <!-- SIDE QUICK-NAV POP-OUT BADGES -->
+  <div id="side-nav-left" class="side-nav-container left hidden">
+    <button class="side-badge-btn" onclick="showSection('intro')">🦁 Animals</button>
+    <button class="side-badge-btn" onclick="showSection('watch')">🎬 Watch</button>
+  </div>
+
+  <div id="side-nav-right" class="side-nav-container right hidden">
+    <button class="side-badge-btn" onclick="showSection('guess')">🔊 Listen</button>
+    <button class="side-badge-btn" onclick="showSection('matching')">🧩 Match</button>
+    <button class="side-badge-btn" onclick="showSection('quiz')">⭐ Quiz</button>
+  </div>
+
+  <header id="main-header">
+    <!-- FULL VECTOR JUNGLE TREES & VINES BACKGROUND -->
+    <svg class="header-jungle-art" viewBox="0 0 1200 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M-20 180 C30 90, 80 40, 150 180 Z" fill="#2e7d32" opacity="0.95"/>
+      <path d="M40 180 C110 60, 170 20, 240 180 Z" fill="#1b5e20" opacity="0.9"/>
+      <path d="M-40 120 Q60 -20 180 80 Q220 -10 320 180 Z" fill="#4caf50" opacity="0.85"/>
+      <path d="M0 0 Q100 80 200 10 Q300 70 420 0 Z" fill="#2e7d32" opacity="0.95"/>
+
+      <path d="M1050 180 C1100 40, 1150 70, 1220 180 Z" fill="#2e7d32" opacity="0.95"/>
+      <path d="M960 180 C1020 20, 1080 50, 1160 180 Z" fill="#1b5e20" opacity="0.9"/>
+      <path d="M880 180 Q980 -10 1080 80 Q1140 -20 1240 120 Z" fill="#4caf50" opacity="0.85"/>
+      <path d="M780 0 Q900 70 1000 10 Q1100 80 1200 0 Z" fill="#2e7d32" opacity="0.95"/>
+
+      <path d="M 180 0 Q 210 60 220 110" stroke="#1b5e20" stroke-width="4" fill="none"/>
+      <path d="M 260 0 Q 280 40 270 90" stroke="#2e7d32" stroke-width="3" fill="none"/>
+      <path d="M 920 0 Q 940 50 950 100" stroke="#1b5e20" stroke-width="4" fill="none"/>
+      <path d="M 990 0 Q 1010 40 1000 85" stroke="#2e7d32" stroke-width="3" fill="none"/>
+    </svg>
+
+    <!-- HEADER ANIMAL FOOTPRINTS / PAW PRINTS -->
+    <span class="header-paw hpaw-1">🐾</span>
+    <span class="header-paw hpaw-2">🐾</span>
+    <span class="header-paw hpaw-3">🐾</span>
+    <span class="header-paw hpaw-4">🐾</span>
+
+    <!-- HANGING MONKEY & SLOTH ON VINES -->
+    <div class="hanging-monkey-wrap">
+      <svg width="45" height="75" viewBox="0 0 50 80">
+        <line x1="25" y1="0" x2="25" y2="40" stroke="#1b5e20" stroke-width="3"/>
+        <text x="5" y="65" font-size="32">🐒</text>
+      </svg>
+    </div>
+
+    <div class="hanging-monkey-wrap right">
+      <svg width="45" height="75" viewBox="0 0 50 80">
+        <line x1="25" y1="0" x2="25" y2="35" stroke="#1b5e20" stroke-width="3"/>
+        <text x="5" y="60" font-size="30">🦥</text>
+      </svg>
+    </div>
+
+    <!-- ANIMATED FLYING BIRDS IN SKY (RIGHT TO LEFT) -->
+    <span class="flying-bird bird-1">🦅</span>
+    <span class="flying-bird bird-2">🦅</span>
+
+    <!-- FLUTTERING BUTTERFLIES IN THE HEADER -->
+    <span class="header-butterfly bf-1">🦋</span>
+    <span class="header-butterfly bf-2">🦋</span>
+
+    <!-- POPULATED ANIMALS & CRITTERS IN THE HEADER TREES -->
+    <span class="header-animal-spot spot-giraffe">🦒</span>
+    <span class="header-animal-spot spot-leopard">🐆</span>
+    <span class="header-animal-spot spot-frog">🐸</span>
+    <span class="header-animal-spot spot-lion">🦁</span>
+
+    <span class="header-animal-spot spot-elephant">🐘</span>
+    <span class="header-animal-spot spot-zebra">🦓</span>
+
+    <h1>🌴 ZOO ADVENTURE 🦁</h1>
+    <nav>
+      <button onclick="showSection('welcome')" id="nav-welcome" class="active">Home</button>
+      <button onclick="showSection('intro')" id="nav-intro">1. Animals</button>
+      <button onclick="showSection('watch')" id="nav-watch">2. Watch</button>
+      <button onclick="showSection('guess')" id="nav-guess">3. Listen</button>
+      <button onclick="showSection('matching')" id="nav-matching">4. Match</button>
+      <button onclick="showSection('quiz')" id="nav-quiz">5. Quiz</button>
+      <button onclick="showSection('closing')" id="nav-closing">Finish</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 1. WELCOME SECTION -->
+    <section id="sec-welcome" class="section-card active">
+      <h2 style="font-size: 2.2rem; color: var(--primary-dark);">ZOO ADVENTURE: MEET THE ANIMALS!</h2>
+      <img src="assets/images/welcome.jpg" alt="Zoo Entrance" class="welcome-banner">
+      <p style="font-size: 1.35rem; margin: 15px 0; font-weight: bold; color: #455a64;">Welcome, Little Explorers! Are you ready to meet five amazing animals? Let’s begin!</p>
+      <button class="btn-main" onclick="showSection('intro')">START ADVENTURE 🚀</button>
+    </section>
+
+    <!-- 2. ANIMAL INTRODUCTION -->
+    <section id="sec-intro" class="section-card">
+      <div class="animal-card">
+        <div class="animal-title-wrap">
+          <h2 id="intro-name" style="font-size: 2.3rem; color: var(--primary-dark);">LION</h2>
+          <button class="btn-speaker" title="Listen to animal sound" onclick="speakCurrentAnimal()">🔊</button>
+        </div>
+        <img id="intro-img" src="" alt="Animal Image" class="animal-img">
+        <ul id="intro-desc" class="description-list"></ul>
+        <div>
+          <button class="btn-main btn-secondary" onclick="prevAnimal()">⬅ BACK</button>
+          <button class="btn-main btn-secondary" onclick="nextAnimal()" style="background: linear-gradient(135deg, #ff9800, #f57c00); box-shadow: 0 8px 0 #b26a00;">NEXT ➡</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. WATCH AND LEARN -->
+    <section id="sec-watch" class="section-card">
+      <h2 style="font-size: 2.2rem; color: var(--primary-dark);">WATCH AND LEARN!</h2>
+      <p style="font-size: 1.2rem; margin: 12px 0; font-weight: bold;">Watch the video carefully and learn more about the amazing animals!</p>
+      <div class="video-wrapper">
+        <iframe id="yt-player" src="https://www.youtube.com/embed/VTmd1bZ3e9s?enablejsapi=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <button class="btn-main btn-secondary" onclick="showSection('guess')" style="background: linear-gradient(135deg, #ff9800, #f57c00); box-shadow: 0 8px 0 #b26a00;">CONTINUE ➡</button>
+    </section>
+
+    <!-- 4. LISTEN AND GUESS -->
+    <section id="sec-guess" class="section-card">
+      <h2 style="font-size: 2.2rem; color: var(--primary-dark);">LISTEN AND GUESS!</h2>
+      <p style="font-size: 1.2rem; margin: 12px 0; font-weight: bold;">Listen carefully to the animal sound. Can you guess which animal makes it?</p>
+      <div style="margin: 20px 0;">
+        <button class="btn-main btn-secondary" onclick="playCurrentGuessSound()" style="background: linear-gradient(135deg, #ff9800, #f57c00); box-shadow: 0 8px 0 #b26a00;">▶ PLAY SOUND</button>
+      </div>
+      <div class="guess-options" id="guess-options-container"></div>
+      <div id="guess-feedback" class="feedback-box"></div>
+      <div style="margin-top: 20px;">
+        <button id="guess-next-btn" class="btn-main btn-secondary" onclick="nextGuessQuestion()" style="display:none; background: linear-gradient(135deg, #ff9800, #f57c00); box-shadow: 0 8px 0 #b26a00;">NEXT SOUND ➡</button>
+      </div>
+    </section>
+
+    <!-- 5. MATCHING ACTIVITY -->
+    <section id="sec-matching" class="section-card">
+      <h2 style="font-size: 2.2rem; color: var(--primary-dark);">MATCH THE ANIMALS!</h2>
+      <p style="font-size: 1.2rem; margin: 12px 0; font-weight: bold;">Look at the animal pictures and match each animal to the correct description.</p>
+      <div class="matching-container">
+        <div class="matching-column" id="match-animals-col"></div>
+        <div class="matching-column" id="match-descs-col"></div>
+      </div>
+      <button class="btn-main btn-secondary" onclick="checkMatchingAnswers()" style="background: linear-gradient(135deg, #ff9800, #f57c00); box-shadow: 0 8px 0 #b26a00;">CHECK ANSWERS ✔</button>
+      <div id="matching-feedback" class="feedback-box"></div>
+      <button id="matching-continue-btn" class="btn-main btn-secondary" onclick="showSection('quiz')" style="display:none; margin-top:10px;">CONTINUE TO QUIZ ➡</button>
+    </section>
+
+    <!-- 6. QUIZ TIME -->
+    <section id="sec-quiz" class="section-card">
+      <h2 style="font-size: 2.2rem; color: var(--primary-dark);">QUIZ TIME!</h2>
+      <p id="quiz-progress" style="font-weight: bold; font-size: 1.3rem; color: var(--secondary); margin: 12px 0;">Question 1 of 5</p>
+      <p id="quiz-question-text" style="font-size: 1.35rem; font-weight: bold; margin-bottom: 20px;"></p>
+      <div class="quiz-options" id="quiz-options-container"></div>
+      <div id="quiz-feedback" class="feedback-box"></div>
+      <div style="margin-top: 15px;">
+        <button id="quiz-next-btn" class="btn-main btn-secondary" onclick="nextQuizQuestion()" style="display:none; background: linear-gradient(135deg, #ff9800, #f57c00); box-shadow: 0 8px 0 #b26a00;">NEXT QUESTION ➡</button>
+      </div>
+      <div id="quiz-result-container" style="display:none;">
+        <h3 style="font-size: 2rem; color: var(--primary-dark);">YOUR QUIZ RESULTS!</h3>
+        <p id="quiz-score-text" style="font-size: 1.5rem; margin: 15px 0; font-weight: bold;"></p>
+        <p id="quiz-message-text" style="font-size: 1.25rem; color: var(--secondary); margin-bottom: 25px; font-weight: bold;"></p>
+        <button class="btn-main btn-secondary" onclick="resetQuiz()">TRY AGAIN 🔄</button>
+        <button class="btn-main btn-secondary" onclick="showSection('closing')" style="background: linear-gradient(135deg, #ff9800, #f57c00); box-shadow: 0 8px 0 #b26a00;">CONTINUE ➡</button>
+      </div>
+    </section>
+
+    <!-- 7. CLOSING SECTION -->
+    <section id="sec-closing" class="section-card">
+      <h2 style="font-size: 2.3rem; color: var(--primary-dark); animation: bounce 1.5s infinite;">CONGRATULATIONS, LITTLE EXPLORERS! 🎉</h2>
+      <p style="font-size: 1.3rem; margin: 20px 0; font-weight: bold;">You have completed your zoo adventure! Today, you learned about five amazing animals. Keep exploring and keep learning!</p>
+      <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 25px 0;">
+        <img src="assets/images/lion.jpg" width="95" style="border-radius: 16px; border: 3px solid #81c784;" alt="Lion">
+        <img src="assets/images/elephant.jpg" width="95" style="border-radius: 16px; border: 3px solid #81c784;" alt="Elephant">
+        <img src="assets/images/giraffe.jpg" width="95" style="border-radius: 16px; border: 3px solid #81c784;" alt="Giraffe">
+        <img src="assets/images/monkey.jpg" width="95" style="border-radius: 16px; border: 3px solid #81c784;" alt="Monkey">
+        <img src="assets/images/zebra.jpg" width="95" style="border-radius: 16px; border: 3px solid #81c784;" alt="Zebra">
+      </div>
+      <div>
+        <button class="btn-main btn-secondary" onclick="showSection('welcome')">HOME 🏠</button>
+        <button class="btn-main btn-secondary" onclick="showSection('intro')" style="background: linear-gradient(135deg, #ff9800, #f57c00); box-shadow: 0 8px 0 #b26a00;">REPLAY 🔄</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal-manual" class="modal-overlay">
+    <div class="modal-content">
+      <h2>📘 User Manual</h2>
+      <p><strong>Introduction & Purpose:</strong> Zoo Adventure is an interactive multimedia courseware designed for primary school pupils learning English. It allows learners to explore 5 wild animals, master pronunciations, watch educational videos, play sound-based guess games, complete matching activities, and test knowledge via quizzes.</p>
+      <h3>Navigation & Controls</h3>
+      <ul>
+        <li><strong>Top Navigation Bar:</strong> Jump directly between any of the 5 learning sections.</li>
+        <li><strong>Pronunciation:</strong> Click the 🔊 speaker button in Section 1 to hear native English animal name pronunciations.</li>
+        <li><strong>Watch & Learn:</strong> Click YouTube controls to play/pause the animal video.</li>
+        <li><strong>Sound Guessing:</strong> Click ▶ PLAY SOUND, listen to synthesized animal audio, and pick the correct animal card.</li>
+        <li><strong>Matching:</strong> Click an animal card, then click its matching description text. Press "Check Answers" when complete.</li>
+        <li><strong>Quiz:</strong> Select one of three choices per question for immediate feedback and final scores.</li>
+      </ul>
+      <button class="btn-main btn-secondary" onclick="closeModal('modal-manual')" style="margin-top: 20px;">Close Manual</button>
+    </div>
+  </div>
+
+  <div id="modal-ethics" class="modal-overlay">
+    <div class="modal-content">
+      <h2>⚖ Ethical Planning & Development</h2>
+      <p>This multimedia courseware complies with educational ethics and digital learning standards:</p>
+      <ul>
+        <li><strong>Age-Appropriate Content:</strong> Text, vocabulary, and visuals are tailored specifically for primary school ESL learners.</li>
+        <li><strong>Copyright & Attribution:</strong> Embedded media relies on open YouTube embedding and royalty-free educational graphics.</li>
+        <li><strong>Privacy Protection:</strong> No personal student data, login credentials, or tracking cookies are collected or stored.</li>
+        <li><strong>Accessibility:</strong> High-contrast typography and clear text feedback are provided alongside audio cues.</li>
+      </ul>
+      <button class="btn-main btn-secondary" onclick="closeModal('modal-ethics')" style="margin-top: 20px;">Close Ethics Info</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-flora-decor">
+      <span>🌴</span> <span>🌺</span> <span>🍃</span> <span>🦎</span> <span>🌿</span> <span>🌺</span> <span>🌴</span>
+    </div>
+    <p> EDUP 3113 |SOFWA QISRINA BINTI MOHD SUKRI| <a onclick="openModal('modal-manual')">User Manual</a> | <a onclick="openModal('modal-ethics')">Ethical Development Statement</a></p>
+  </footer>
+
+  <script>
+    // HEADER SHRINK-ON-SCROLL EVENT LISTENER
+    window.addEventListener('scroll', function() {
+      const header = document.getElementById('main-header');
+      if (window.scrollY > 40) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    const animalsData = [
+      {
+        id: 'lion', name: 'LION',
+        img: 'assets/images/lion.jpg',
+        desc: ['A lion is a wild animal.', 'It has four legs.', 'It has a big mane.', 'It is known as the king of the jungle.']
+      },
+      {
+        id: 'elephant', name: 'ELEPHANT',
+        img: 'assets/images/elephant.jpg',
+        desc: ['An elephant is a very big animal.', 'It has a long trunk.', 'It has big ears.', 'It is a strong animal.']
+      },
+      {
+        id: 'giraffe', name: 'GIRAFFE',
+        img: 'assets/images/giraffe.jpg',
+        desc: ['A giraffe is a tall animal.', 'It has a very long neck.', 'It has brown spots.', 'It eats leaves from tall trees.']
+      },
+      {
+        id: 'monkey', name: 'MONKEY',
+        img: 'assets/images/monkey.jpg',
+        desc: ['A monkey is a playful animal.', 'It has two arms and two legs.', 'It can climb trees.', 'It likes eating bananas.']
+      },
+      {
+        id: 'zebra', name: 'ZEBRA',
+        img: 'assets/images/zebra.jpg',
+        desc: ['A zebra looks like a horse.', 'It has black and white stripes.', 'It has four legs.', 'Every zebra has a unique stripe pattern.']
+      }
+    ];
+
+    let currentIntroIdx = 0;
+
+    function showSection(sectionId) {
+      document.querySelectorAll('.section-card').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+      
+      document.getElementById('sec-' + sectionId).classList.add('active');
+      const activeNav = document.getElementById('nav-' + sectionId);
+      if (activeNav) activeNav.classList.add('active');
+
+      const homeLeft = document.getElementById('home-decor-left');
+      const homeRight = document.getElementById('home-decor-right');
+      const sideNavLeft = document.getElementById('side-nav-left');
+      const sideNavRight = document.getElementById('side-nav-right');
+
+      if (sectionId === 'welcome') {
+        if (homeLeft) homeLeft.classList.remove('hidden');
+        if (homeRight) homeRight.classList.remove('hidden');
+        if (sideNavLeft) sideNavLeft.classList.add('hidden');
+        if (sideNavRight) sideNavRight.classList.add('hidden');
+      } else {
+        if (homeLeft) homeLeft.classList.add('hidden');
+        if (homeRight) homeRight.classList.add('hidden');
+        if (sideNavLeft) sideNavLeft.classList.remove('hidden');
+        if (sideNavRight) sideNavRight.classList.remove('hidden');
+      }
+
+      if (sectionId === 'intro') renderAnimalIntro();
+      if (sectionId === 'guess') initGuessActivity();
+      if (sectionId === 'matching') initMatchingActivity();
+      if (sectionId === 'quiz') initQuizActivity();
+
+      // TRIGGER CONFETTI AND FANFARE CHEER WHEN FINISH PAGE IS REACHED
+      if (sectionId === 'closing') {
+        triggerConfettiCelebration();
+        playCelebrationFanfare();
+      }
+    }
+
+    /* CONFETTI CELEBRATION ENGINE */
+    function triggerConfettiCelebration() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#ff4081', '#ffeb3b', '#00e676', '#00b0ff', '#aa00ff', '#ff9100'];
+
+      for (let i = 0; i < 120; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 10 + 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speedY: Math.random() * 4 + 2,
+          speedX: Math.random() * 2 - 1,
+          rotation: Math.random() * 360,
+          rotSpeed: Math.random() * 6 - 3
+        });
+      }
+
+      let animationId;
+      let duration = 0;
+
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.rotSpeed;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+
+        duration++;
+        if (duration < 300) {
+          animationId = requestAnimationFrame(render);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          cancelAnimationFrame(animationId);
+        }
+      }
+
+      render();
+    }
+
+    /* CELEBRATION CHEER AUDIO SYNTHESIZER */
+    function playCelebrationFanfare() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        
+        const startTime = ctx.currentTime + (idx * 0.12);
+        gain.gain.setValueAtTime(0.3, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+
+        osc.start(startTime);
+        osc.stop(startTime + 0.4);
+      });
+    }
+
+    function renderAnimalIntro() {
+      const animal = animalsData[currentIntroIdx];
+      document.getElementById('intro-name').innerText = animal.name;
+      document.getElementById('intro-img').src = animal.img;
+      
+      const descUl = document.getElementById('intro-desc');
+      descUl.innerHTML = '';
+      animal.desc.forEach(text => {
+        const li = document.createElement('li');
+        li.innerText = text;
+        descUl.appendChild(li);
+      });
+    }
+
+    function prevAnimal() {
+      if (currentIntroIdx > 0) { currentIntroIdx--; renderAnimalIntro(); }
+    }
+    function nextAnimal() {
+      if (currentIntroIdx < animalsData.length - 1) { currentIntroIdx++; renderAnimalIntro(); }
+      else { showSection('watch'); }
+    }
+
+    function speakCurrentAnimal() {
+      const currentAnimalId = animalsData[currentIntroIdx].id;
+      playSynthesizedAnimalSound(currentAnimalId);
+    }
+
+    const guessQuestions = [
+      { id: 'lion', sound: 'roar', options: ['lion', 'elephant', 'monkey'], answer: 'lion' },
+      { id: 'elephant', sound: 'trumpet', options: ['giraffe', 'elephant', 'zebra'], answer: 'elephant' },
+      { id: 'monkey', sound: 'chatter', options: ['lion', 'monkey', 'zebra'], answer: 'monkey' }
+    ];
+    let currentGuessIdx = 0;
+
+    function initGuessActivity() {
+      currentGuessIdx = 0;
+      renderGuessQuestion();
+    }
+
+    function renderGuessQuestion() {
+      const q = guessQuestions[currentGuessIdx];
+      const container = document.getElementById('guess-options-container');
+      const feedback = document.getElementById('guess-feedback');
+      const nextBtn = document.getElementById('guess-next-btn');
+
+      container.innerHTML = '';
+      feedback.style.display = 'none';
+      nextBtn.style.display = 'none';
+
+      q.options.forEach(optId => {
+        const animal = animalsData.find(a => a.id === optId);
+        const card = document.createElement('div');
+        card.className = 'guess-card';
+        card.onclick = () => checkGuessAnswer(optId);
+        card.innerHTML = `<img src="${animal.img}" alt="${animal.name}"><p style="font-weight:bold; margin-top:8px; font-size: 1.1rem;">${animal.name}</p>`;
+        container.appendChild(card);
+      });
+    }
+
+    function playCurrentGuessSound() {
+      const animalId = guessQuestions[currentGuessIdx].id;
+      playSynthesizedAnimalSound(animalId);
+    }
+
+    function playSynthesizedAnimalSound(type) {
+      const audio = new Audio('assets/audio/' + type + '.mp3');
+      audio.play().catch(err => {
+        console.log('Audio playback prevented or file missing:', err);
+      });
+    }
+
+    function checkGuessAnswer(selectedId) {
+      const q = guessQuestions[currentGuessIdx];
+      const feedback = document.getElementById('guess-feedback');
+      const nextBtn = document.getElementById('guess-next-btn');
+
+      feedback.style.display = 'block';
+      if (selectedId === q.answer) {
+        feedback.className = 'feedback-box correct';
+        feedback.innerText = "Great job! That’s correct!";
+        nextBtn.style.display = 'inline-block';
+      } else {
+        feedback.className = 'feedback-box incorrect';
+        feedback.innerText = "Oops! Try again!";
+      }
+    }
+
+    function nextGuessQuestion() {
+      if (currentGuessIdx < guessQuestions.length - 1) {
+        currentGuessIdx++;
+        renderGuessQuestion();
+      } else {
+        showSection('matching');
+      }
+    }
+
+    const matchingPairs = [
+      { id: 'lion', desc: 'It is the king of the jungle and has a big mane.' },
+      { id: 'elephant', desc: 'It has a long trunk and big ears.' },
+      { id: 'giraffe', desc: 'It is very tall and has a long neck.' },
+      { id: 'monkey', desc: 'It is playful and likes climbing trees.' },
+      { id: 'zebra', desc: 'It has black and white stripes.' }
+    ];
+    let selectedMatchAnimal = null;
+    let selectedMatchDesc = null;
+    let userMatches = {};
+
+    function initMatchingActivity() {
+      userMatches = {};
+      selectedMatchAnimal = null;
+      selectedMatchDesc = null;
+      document.getElementById('matching-feedback').style.display = 'none';
+      document.getElementById('matching-continue-btn').style.display = 'none';
+
+      const animalsCol = document.getElementById('match-animals-col');
+      const descsCol = document.getElementById('match-descs-col');
+      animalsCol.innerHTML = ''; descsCol.innerHTML = '';
+
+      animalsData.forEach(a => {
+        const item = document.createElement('div');
+        item.className = 'match-item';
+        item.id = 'match-a-' + a.id;
+        item.onclick = () => selectMatchItem('animal', a.id);
+        item.innerHTML = `<span>${a.name}</span><img src="${a.img}" width="36" style="border-radius: 8px;">`;
+        animalsCol.appendChild(item);
+      });
+
+      const shuffled = [...matchingPairs].sort(() => Math.random() - 0.5);
+      shuffled.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'match-item';
+        item.id = 'match-d-' + p.id;
+        item.onclick = () => selectMatchItem('desc', p.id);
+        item.innerText = p.desc;
+        descsCol.appendChild(item);
+      });
+    }
+
+    function selectMatchItem(type, id) {
+      if (type === 'animal') {
+        document.querySelectorAll('#match-animals-col .match-item').forEach(el => el.classList.remove('selected'));
+        selectedMatchAnimal = id;
+        document.getElementById('match-a-' + id).classList.add('selected');
+      } else {
+        document.querySelectorAll('#match-descs-col .match-item').forEach(el => el.classList.remove('selected'));
+        selectedMatchDesc = id;
+        document.getElementById('match-d-' + id).classList.add('selected');
+      }
+
+      if (selectedMatchAnimal && selectedMatchDesc) {
+        userMatches[selectedMatchAnimal] = selectedMatchDesc;
+        document.getElementById('match-a-' + selectedMatchAnimal).classList.remove('selected');
+        document.getElementById('match-d-' + selectedMatchDesc).classList.remove('selected');
+        document.getElementById('match-a-' + selectedMatchAnimal).classList.add('matched');
+        document.getElementById('match-d-' + selectedMatchDesc).classList.add('matched');
+        selectedMatchAnimal = null; selectedMatchDesc = null;
+      }
+    }
+
+    function checkMatchingAnswers() {
+      const feedback = document.getElementById('matching-feedback');
+      feedback.style.display = 'block';
+
+      let correctCount = 0;
+
+      document.querySelectorAll('.match-item').forEach(el => {
+        el.classList.remove('correct', 'incorrect');
+      });
+
+      matchingPairs.forEach(p => {
+        const animalEl = document.getElementById('match-a-' + p.id);
+        const descId = userMatches[p.id];
+        const descEl = descId ? document.getElementById('match-d-' + descId) : null;
+
+        if (userMatches[p.id] === p.id) {
+          correctCount++;
+          if (animalEl) animalEl.classList.add('correct');
+          if (descEl) descEl.classList.add('correct');
+        } else {
+          if (animalEl) animalEl.classList.add('incorrect');
+          if (descEl) descEl.classList.add('incorrect');
+        }
+      });
+
+      if (correctCount === matchingPairs.length) {
+        feedback.className = 'feedback-box correct';
+        feedback.innerText = "Excellent! You matched the animals correctly!";
+        document.getElementById('matching-continue-btn').style.display = 'inline-block';
+      } else {
+        feedback.className = 'feedback-box incorrect';
+        feedback.innerText = "Not quite! Try matching them again.";
+      }
+    }
+
+    const quizQuestions = [
+      { q: "Which animal is known as the king of the jungle?", opts: ["Elephant", "Lion", "Zebra"], ans: 1 },
+      { q: "Which animal has a long trunk?", opts: ["Monkey", "Giraffe", "Elephant"], ans: 2 },
+      { q: "Which animal has a very long neck?", opts: ["Giraffe", "Lion", "Zebra"], ans: 0 },
+      { q: "Which animal likes climbing trees?", opts: ["Elephant", "Monkey", "Zebra"], ans: 1 },
+      { q: "Which animal has black and white stripes?", opts: ["Lion", "Giraffe", "Zebra"], ans: 2 }
+    ];
+    let currentQuizIdx = 0;
+    let quizScore = 0;
+
+    function initQuizActivity() {
+      currentQuizIdx = 0;
+      quizScore = 0;
+      document.getElementById('quiz-result-container').style.display = 'none';
+      document.getElementById('quiz-question-text').style.display = 'block';
+      document.getElementById('quiz-options-container').style.display = 'flex';
+      document.getElementById('quiz-progress').style.display = 'block';
+      renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+      const q = quizQuestions[currentQuizIdx];
+      document.getElementById('quiz-progress').innerText = `Question ${currentQuizIdx + 1} of ${quizQuestions.length}`;
+      document.getElementById('quiz-question-text').innerText = q.q;
+
+      const optsContainer = document.getElementById('quiz-options-container');
+      const feedback = document.getElementById('quiz-feedback');
+      const nextBtn = document.getElementById('quiz-next-btn');
+
+      optsContainer.innerHTML = '';
+      feedback.style.display = 'none';
+      nextBtn.style.display = 'none';
+
+      q.opts.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-btn';
+        btn.innerText = `${String.fromCharCode(65 + idx)}. ${optText}`;
+        btn.onclick = () => checkQuizAnswer(idx);
+        optsContainer.appendChild(btn);
+      });
+    }
+
+    function checkQuizAnswer(selectedIdx) {
+      const q = quizQuestions[currentQuizIdx];
+      const feedback = document.getElementById('quiz-feedback');
+      const nextBtn = document.getElementById('quiz-next-btn');
+
+      feedback.style.display = 'block';
+      if (selectedIdx === q.ans) {
+        feedback.className = 'feedback-box correct';
+        feedback.innerText = "Well done! That’s the correct answer!";
+        quizScore++;
+      } else {
+        feedback.className = 'feedback-box incorrect';
+        feedback.innerText = "Good try! Let’s learn from our mistakes.";
+      }
+
+      document.querySelectorAll('.quiz-btn').forEach(btn => btn.disabled = true);
+      nextBtn.style.display = 'inline-block';
+    }
+
+    function nextQuizQuestion() {
+      if (currentQuizIdx < quizQuestions.length - 1) {
+        currentQuizIdx++;
+        renderQuizQuestion();
+      } else {
+        showQuizResults();
+      }
+    }
+
+    function showQuizResults() {
+      document.getElementById('quiz-question-text').style.display = 'none';
+      document.getElementById('quiz-options-container').style.display = 'none';
+      document.getElementById('quiz-progress').style.display = 'none';
+      document.getElementById('quiz-feedback').style.display = 'none';
+      document.getElementById('quiz-next-btn').style.display = 'none';
+
+      const resContainer = document.getElementById('quiz-result-container');
+      resContainer.style.display = 'block';
+
+      document.getElementById('quiz-score-text').innerText = `You got ${quizScore} out of ${quizQuestions.length} correct!`;
+
+      const msgEl = document.getElementById('quiz-message-text');
+      if (quizScore === 5) msgEl.innerText = "Fantastic! You are an animal expert!";
+      else if (quizScore >= 3) msgEl.innerText = "Great effort! You are learning so much!";
+      else msgEl.innerText = "Good try! Keep practising and learning!";
+    }
+
+    function resetQuiz() { initQuizActivity(); }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+  </script>
+</body>
+</html>

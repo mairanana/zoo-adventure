@@ -1,0 +1,11 @@
+.match-item.correct { 
+  background: #c8e6c9 !important; 
+  border-color: #2e7d32 !important; 
+  color: #1b5e20;
+}
+
+.match-item.incorrect { 
+  background: #ffcdd2 !important; 
+  border-color: #d32f2f !important; 
+  color: #b71c1c;
+}
